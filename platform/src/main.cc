@@ -1,6 +1,6 @@
 /*
- * Carl Saldanha <cjds92@gmail.com>
-*/
+* @author Carl Saldanha <cjds92@gmail.com>
+ */
 
 #include <errno.h>
 #include <fcntl.h>
@@ -9,42 +9,36 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <string>
+#include "platform/include/rpi_gpio.h"
 
-enum class GPIO{
-  GPIO1 = 1,
-  GPIO2 = 2,
-  GPIO6 = 6,
-  GPIO13 = 13,
-  GPIO16 = 16,
-  GPIO20 = 20,
-  GPIO21 = 21,
 
-};
+void exportPin(GPIO pin)
+{
+  // Export the desired pin by writing to /sys/class/gpio/export
+    int fd = open("/sys/class/gpio/export", O_WRONLY);
+    if (fd == -1) {
+        perror("Unable to open /sys/class/gpio/export");
+    }
 
-void exportPin(int pin)
+    if (write(fd, "24", 2) != 2) {
+        perror("Error writing to /sys/class/gpio/export");
+    }
+
+    close(fd);
+}
+
+
+void setIO(GPIO pin, Direction direction)
 {
 }
 
 int main()
 {
-    // Export the desired pin by writing to /sys/class/gpio/export
-
-    int fd = open("/sys/class/gpio/export", O_WRONLY);
-    if (fd == -1) {
-        perror("Unable to open /sys/class/gpio/export");
-        exit(1);
-    }
-
-    if (write(fd, "24", 2) != 2) {
-        perror("Error writing to /sys/class/gpio/export");
-        exit(1);
-    }
-
-    close(fd);
 
     // Set the pin to be an output by writing "out" to /sys/class/gpio/gpio26/direction
 
-    fd = open("/sys/class/gpio/gpio26/direction", O_WRONLY);
+    int fd = open("/sys/class/gpio/gpio26/direction", O_WRONLY);
     if (fd == -1) {
         perror("Unable to open /sys/class/gpio/gpio26/direction");
         exit(1);
