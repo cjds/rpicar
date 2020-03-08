@@ -38,7 +38,6 @@ int main()
     }
 
     // Toggle LED 50 ms on, 50ms off, 100 times (10 seconds)
-
     for (int i = 0; i < 100; i++) {
         if (write(fd, "1", 1) != 1) {
             perror("Error writing to /sys/class/gpio/gpio26/value");
