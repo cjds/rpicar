@@ -1,6 +1,3 @@
-# Bazel Configuration
-.bazelrc
-
 # IDE configuration
 .clwb/
 .idea/
