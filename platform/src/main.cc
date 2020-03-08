@@ -29,10 +29,6 @@ void exportPin(GPIO pin)
 }
 
 
-void setIO(GPIO pin, Direction direction)
-{
-}
-
 int main()
 {
 
