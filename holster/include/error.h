@@ -9,6 +9,10 @@ class Error
     error_(error)
     {}
 
+    const char* throw_error()  const throw()
+    {
+      return error_.c_str();
+    }
   private:
     std::string error_;
 };

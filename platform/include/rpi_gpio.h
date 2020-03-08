@@ -4,9 +4,16 @@
  */
 
 #include "holster/include/error.h"
+
+// C Standard Libs
+#include <fcntl.h>
+#include <unistd.h>
+
+// C++ Standard Libs
 #include <optional>
 #include <tuple>
 #include <string>
+#include <cstring>
 
 enum class Gpio
 {
@@ -17,6 +24,7 @@ enum class Gpio
   PIN16 = 16,
   PIN20 = 20,
   PIN21 = 21,
+  PIN26 = 26,
 };
 
 
@@ -29,74 +37,102 @@ enum class Direction
 
 class GpioPinControl
 {
-  public:
+  private:
   explicit GpioPinControl(Gpio pin, int direction_filedescriptor, int value_filedescriptor):
     pin_(pin),
     direction_filedescriptor_(direction_filedescriptor),
-    value_filedescriptor_(value_filedescriptor)
+    value_filedescriptor_(value_filedescriptor),
+    exported_(true)
   {}
 
-  Gpio getPin()
-  {
-    return pin_;
-  }
+  public:
+    static std::tuple<std::optional<Error>, std::optional<GpioPinControl>> newControl(const Gpio& pin)
+    {
+      // Export the desired pin by writing to /sys/class/gpio/export
+      int fd = open("/sys/class/gpio/export", O_WRONLY);
+      if (fd == -1) {
+        return std::make_tuple(make_error("Error writing to /sys/class/gpio/export"), std::nullopt);
+      }
+    
+      if (write(fd, std::to_string(static_cast<uint8_t>(pin)).c_str(), 2) != 2) {
+        return std::make_tuple(make_error("Error writing to /sys/class/gpio/export"), std::nullopt);
+      }
+    
+      std::string gpio_id = std::to_string(static_cast<uint8_t>(pin));
+      int value_fd = open(("/sys/class/gpio/" + gpio_id + "/value").c_str(), O_WRONLY);
+      if (value_fd == -1)
+      {
+        return std::make_tuple(make_error("Error writing to GPIO value"), std::nullopt);
+      }
+      int direction_fd = open(("/sys/class/gpio/" + gpio_id + "/direction").c_str(), O_WRONLY);
+      if (direction_fd == -1)
+      {
+        return std::make_tuple(make_error("Error writing to GPIO direction"), std::nullopt);
+      }
+      return std::make_tuple(std::nullopt, std::optional<GpioPinControl>(GpioPinControl(pin, value_fd, direction_fd)));
+    };
 
-  ~GpioPinControl()
-  {
-    close(direction_filedescriptor_);
-    close(value_filedescriptor_);
-  }
-
-  std::optional<Error> setDirection(Direction direction)
-  {
-    if (write(direction_filedescriptor_, "out", 1) != 1) {
-      return make_error("Error changing description");
+    Gpio getPin()
+    {
+      return pin_;
     }
-    return std::nullopt; 
-  }
 
-  std::optional<Error> setValue(bool value)
-  {
-    char output_value[1] = {'1'};
-    if (write(value_filedescriptor_, output_value, 3) != 3) {
-      return make_error("Error setting value to file descriptor");
+    ~GpioPinControl()
+    {
+      if (exported_)
+        Error("GPIO Already released").throw_error();
+      close(direction_filedescriptor_);
+      close(value_filedescriptor_);
     }
-    return std::nullopt; 
-  }
+  
+    std::optional<Error> setDirection(Direction direction)
+    {
+      if (not exported_) return make_error("GPIO Already released");
+      if (write(direction_filedescriptor_, "out", 1) != 1) {
+        return make_error("Error changing description");
+      }
+      return std::nullopt; 
+    }
+  
+    std::optional<Error> setValue(bool value)
+    {
+      if (not exported_) return make_error("GPIO Already released");
+      char output_value[1] = {'1'};
+      if (write(value_filedescriptor_, output_value, 3) != 3) {
+        return make_error("Error setting value to file descriptor");
+      }
+      return std::nullopt; 
+    }
+  
+    std::tuple<std::optional<Error>, bool> getValue()
+    {
+      if (not exported_) return std::make_tuple(make_error("GPIO Already released"), false);
+      bool value = false;
+      char value_str[3];
+      if (-1 == read(value_filedescriptor_, value_str, 3)) {
+        return std::make_tuple(make_error("Failed to read value!"), false);
+      }
+      if (std::strcmp(value_str, "1")) value = true;
+      return std::make_tuple(std::nullopt, value);
+    }
 
-  std::tuple<std::optional<Error>, bool> getValue()
-  {
-    return std::make_tuple(std::nullopt, false);
-  }
+    std::optional<Error> release()
+    {
+      int fd = open("/sys/class/gpio/unexport", O_WRONLY);
+      if (fd == -1) return make_error("Release failed");
+      if (write(fd, std::to_string(static_cast<uint8_t>(pin_)).c_str(), 2) != 2) {
+	return make_error("Writing export failed");
+      }
+      close(fd);
+      exported_ = false;
+      return std::nullopt;
+    }
 
   private:
-    Gpio pin_;
+    const Gpio pin_;
     int direction_filedescriptor_;
     int value_filedescriptor_;
+    bool exported_;
 };
 
-std::tuple<std::optional<Error>, std::optional<GpioPinControl>> newGpioPinControl(Gpio pin)
-{
-  // Export the desired pin by writing to /sys/class/gpio/export
-  int fd = open("/sys/class/gpio/export", O_WRONLY);
-  if (fd == -1) {
-    return std::make_tuple(make_error("Error writing to /sys/class/gpio/export"), std::nullopt);
-  }
 
-  if (write(fd, std::to_string(static_cast<uint8_t>(pin)).c_str(), 2) != 2) {
-    return std::make_tuple(make_error("Error writing to /sys/class/gpio/export"), std::nullopt);
-  }
-
-  std::string gpio_id = std::to_string(static_cast<uint8_t>(pin));
-  int value_fd = open(("/sys/class/gpio/" + gpio_id + "/value").c_str(), O_WRONLY);
-  if (value_fd == -1)
-  {
-    return std::make_tuple(make_error("Error writing to GPIO value"), std::nullopt);
-  }
-  int direction_fd = open(("/sys/class/gpio/" + gpio_id + "/direction").c_str(), O_WRONLY);
-  if (direction_fd == -1)
-  {
-    return std::make_tuple(make_error("Error writing to GPIO direction"), std::nullopt);
-  }
-  return std::make_tuple(std::nullopt, std::make_optional<GpioPinControl>(pin, value_fd, direction_fd));
-};
