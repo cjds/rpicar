@@ -4,6 +4,7 @@
  */
 
 #include <optional>
+#include <tuple>
 #include "holster/include/error.h"
 
 enum class Gpio
@@ -27,15 +28,20 @@ enum class Direction
 
 class GpioPinControl
 {
-  GPIOPinControl(Gpio pin)
+  GpioPinControl(Gpio pin):
     pin_(pin)
   {}
 
+  Gpio getPin()
+  {
+    return pin_;
+  }
+
   private:
-    GPIO pin_;
-}
+    Gpio pin_;
+};
 
 std::tuple<std::optional<Error>, std::optional<GpioPinControl>> newGpioPinControl(Gpio pin)
 {
-  return std::tuple(std::nullopt, std::nullopt);
-}
+  return std::make_tuple(std::nullopt, std::nullopt);
+};

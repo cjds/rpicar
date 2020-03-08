@@ -13,7 +13,7 @@
 #include "platform/include/rpi_gpio.h"
 
 
-void exportPin(GPIO pin)
+void exportPin(Gpio pin)
 {
   // Export the desired pin by writing to /sys/class/gpio/export
     int fd = open("/sys/class/gpio/export", O_WRONLY);
