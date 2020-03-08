@@ -9,24 +9,8 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include <string>
+
 #include "platform/include/rpi_gpio.h"
-
-
-void exportPin(Gpio pin)
-{
-  // Export the desired pin by writing to /sys/class/gpio/export
-    int fd = open("/sys/class/gpio/export", O_WRONLY);
-    if (fd == -1) {
-        perror("Unable to open /sys/class/gpio/export");
-    }
-
-    if (write(fd, "24", 2) != 2) {
-        perror("Error writing to /sys/class/gpio/export");
-    }
-
-    close(fd);
-}
 
 
 int main()
