@@ -14,7 +14,7 @@ int main()
     auto [error, gpio_control ] = GpioPinControl::newControl(Gpio::PIN26);
     uint8_t number_of_times = 10;
     if (error.has_value()) return 1;
-    error = gpio_control.value().setDirection(Direction::OUT);
+    error = gpio_control.value().setDirection(GpioDirection::OUT);
     if (error.has_value()) return 1;
     
     for (uint8_t i=0; i< number_of_times; i++)

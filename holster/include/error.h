@@ -1,5 +1,10 @@
-#include <string>
+/*
+ * @author Carl Saldanha <cjds92@gmail.com>
+ * @brief An error handler
+ */
+
 #include <optional>
+#include <string>
 
 
 class Error

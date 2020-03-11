@@ -28,7 +28,7 @@ enum class Gpio
 };
 
 
-enum class Direction
+enum class GpioDirection
 {
   IN = 0,
   OUT = 1
@@ -85,7 +85,7 @@ class GpioPinControl
       close(value_filedescriptor_);
     }
   
-    std::optional<Error> setDirection(Direction direction)
+    std::optional<Error> setDirection(GpioDirection direction)
     {
       if (not exported_) return make_error("GPIO Already released");
       if (write(direction_filedescriptor_, "out", 1) != 1) {
