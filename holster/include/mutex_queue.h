@@ -15,16 +15,18 @@ public:
   void push(const T& value)
   {
     std::lock_guard<std::mutex> lock(m_mutex);
-    m_queque.push(value);
+    m_queue.push(value);
   }
 
-  void pop()
+  T& pop()
   {
     std::lock_guard<std::mutex> lock(m_mutex);
-    m_queque.pop();
+    T& result = m_queue.front();
+    m_queue.pop();
+    return result;
   }
 
 private:
-    std::queue<T> m_queque;
+    std::queue<T> m_queue;
     mutable std::mutex m_mutex;
 };
