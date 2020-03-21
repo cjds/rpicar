@@ -18,12 +18,24 @@ public:
     m_queue.push(value);
   }
 
-  T& pop()
+  T pop()
   {
-    std::lock_guard<std::mutex> lock(m_mutex);
-    T& result = m_queue.front();
-    m_queue.pop();
-    return result;
+    if (m_queue.size() >0)
+    {
+      std::lock_guard<std::mutex> lock(m_mutex);
+      T& result = m_queue.front();
+      m_queue.pop();
+      return result;
+    }
+    else
+    {
+	return static_cast<T>(0);
+    }
+  }
+
+  size_t size()
+  {
+    return m_queue.size();
   }
 
 private:

@@ -12,7 +12,6 @@
 #include <functional>
 
 
-
 const std::string ask_question(const std::string& question)
 {
   std::string input_string;
@@ -53,7 +52,8 @@ void user_input_thread(int& stop, MutexQueue<uint8_t>& command_queue)
     {
       std::cout << "Wrong move cowboy" << std::endl;
     }
-    std::this_thread::sleep_for(2s);
+
+    std::this_thread::sleep_for(2ms);
   }
 }
 
@@ -62,8 +62,9 @@ void car_thread(int& stop, MutexQueue<uint8_t>& command_queue)
   using namespace std::chrono_literals;
   while (!stop)
   {
-	std::cout << command_queue.pop() << std::endl;
-   std::this_thread::sleep_for(2s);
+   uint8_t val = command_queue.pop();
+   if (val != 0) std::cout << std::to_string(val) << std::endl;
+   std::this_thread::sleep_for(2ms);
   }
 }
 
