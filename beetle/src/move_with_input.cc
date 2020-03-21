@@ -62,9 +62,8 @@ void car_thread(int& stop, MutexQueue<uint8_t>& command_queue)
   using namespace std::chrono_literals;
   while (!stop)
   {
-   uint8_t val = command_queue.pop();
-   if (val != 0) std::cout << std::to_string(val) << std::endl;
-   std::this_thread::sleep_for(2ms);
+    if (command_queue.size() > 0) std::cout << std::to_string(command_queue.pop()) << std::endl;
+    std::this_thread::sleep_for(2ms);
   }
 }
 
