@@ -10,6 +10,7 @@
 #include <iostream>
 #include <signal.h>
 
+
 volatile sig_atomic_t stop;
 
 const std::string ask_question(const std::string& question)
@@ -57,12 +58,13 @@ void user_input_thread(MutexQueue<uint8_t>& command_queue)
 void car_thread(MutexQueue<uint8_t>& command_queue)
 {
 }
+
 int main()
 {
-  std::unique_ptr<MutexQueue<uint8_t>> command_queue = std::make_unique<MutexQueue<uint8_t>>();
+  MutexQueue<uint8_t> command_queue;
   signal(SIGINT, inthand);
-  std::thread t1(car_thread, command_queue);
-  std::thread t2(user_input_thread, command_queue);
+  std::thread t1(car_thread, std::ref(command_queue));
+  std::thread t2(user_input_thread, std::ref(command_queue));
   t1.join();
   t2.join();
 }

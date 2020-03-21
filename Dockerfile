@@ -13,8 +13,9 @@ COPY --from=git_stage /rpicar /rpicar
 RUN apt update && DEBIAN_FRONTEND=noninteractive apt install --yes curl gnupg2 git
 RUN curl -s -N https://bazel.build/bazel-release.pub.gpg | apt-key add -
 RUN curl -s -N https://raw.githubusercontent.com/git/git/master/contrib/completion/git-completion.bash -o ~/.git-completion.bash
+RUN wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key|apt-key add -
 RUN echo "deb [arch=amd64] https://storage.googleapis.com/bazel-apt stable jdk1.8" | tee /etc/apt/sources.list.d/bazel.list
-RUN apt update && DEBIAN_FRONTEND=noninteractive apt install --yes neovim bazel clang valgrind cppcheck
+RUN apt update && DEBIAN_FRONTEND=noninteractive apt install --yes neovim bazel valgrind cppcheck wget clang-10 lldb-10 lld-10
 RUN echo "source /rpicar/helpers.bash">> ~/.bashrc
 RUN echo "source ~/.git-completions.bash">> ~/.bashrc
 
