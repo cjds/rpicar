@@ -4,6 +4,7 @@
  */
 
 #include "holster/include/mutex_queue.h"
+#include "platform/include/rpi_gpio.h"
 #include "beetle/include/car.h"
 #include <thread>
 #include <chrono>
@@ -60,6 +61,11 @@ void user_input_thread(int& stop, MutexQueue<uint8_t>& command_queue)
 void car_thread(int& stop, MutexQueue<uint8_t>& command_queue)
 {
   using namespace std::chrono_literals;
+  std::array<Wheel<RPIHal>, 4> wheels{Wheel("f_left", newHal()), 
+  Wheel("f_right", newHal()), 
+  Wheel("b_left", newHal()), 
+  Wheel("b_right", newHal())}; 
+  Car<RPIHal> c{wheels};
   while (!stop)
   {
     if (command_queue.size() > 0) std::cout << std::to_string(command_queue.pop()) << std::endl;

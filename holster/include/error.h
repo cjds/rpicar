@@ -3,6 +3,9 @@
  * @brief An error handler
  */
 
+#ifndef HOLSTER_INCLUDE_ERROR
+#define HOLSTER_INCLUDE_ERROR
+
 #include <optional>
 #include <string>
 
@@ -26,3 +29,6 @@ const std::optional<Error> make_error(const std::string& error_str)
 {
   return std::make_optional<Error>(error_str);
 }
+
+#endif // HOLSTER_INCLUDE_ERROR
+

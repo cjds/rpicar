@@ -10,10 +10,11 @@
 #include <unistd.h>
 
 // C++ Standard Libs
+#include <chrono>
+#include <cstring>
 #include <optional>
 #include <tuple>
 #include <string>
-#include <cstring>
 
 enum class Gpio
 {
@@ -22,6 +23,7 @@ enum class Gpio
   PIN6 = 6,
   PIN13 = 13,
   PIN16 = 16,
+  PIN19 = 19,
   PIN20 = 20,
   PIN21 = 21,
   PIN26 = 26,
@@ -136,3 +138,41 @@ class GpioPinControl
 };
 
 
+class RPIHal
+{
+ public:
+  RPIHal(const GpioPinControl& input1, const GpioPinControl& input2):
+    input1_(input1),
+    input2_(input2)
+  {}
+
+  void update(const int speed, const std::chrono::time_point<std::chrono::steady_clock>& time_point)
+  {
+    last_call_time = time_point;
+    // std::optional<Error> _;
+    if (speed > 0) {
+	input1_.setValue(1);
+	input2_.setValue(0);
+    }
+    else if (speed < 0) {
+	input1_.setValue(0);
+	input2_.setValue(1);
+    }
+    else {
+	input1_.setValue(0);
+	input2_.setValue(0);
+    }
+  }
+
+ private:
+  GpioPinControl input1_;
+  GpioPinControl input2_;
+  std::chrono::time_point<std::chrono::steady_clock> last_call_time;
+};
+
+
+RPIHal newHal(){
+  auto [error, in1 ] = GpioPinControl::newControl(Gpio::PIN26);
+  auto [error2, in2 ] = GpioPinControl::newControl(Gpio::PIN19);
+  return RPIHal(in1.value(), in2.value());
+}
