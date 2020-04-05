@@ -171,8 +171,8 @@ class RPIHal
 };
 
 
-RPIHal newHal(){
-  auto [error, in1 ] = GpioPinControl::newControl(Gpio::PIN26);
-  auto [error2, in2 ] = GpioPinControl::newControl(Gpio::PIN19);
+RPIHal newHal(Gpio p1, Gpio p2){
+  auto [error, in1 ] = GpioPinControl::newControl(p1);
+  auto [error2, in2 ] = GpioPinControl::newControl(p2);
   return RPIHal(in1.value(), in2.value());
 }

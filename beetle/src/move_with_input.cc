@@ -61,10 +61,10 @@ void user_input_thread(int& stop, MutexQueue<uint8_t>& command_queue)
 void car_thread(int& stop, MutexQueue<uint8_t>& command_queue)
 {
   using namespace std::chrono_literals;
-  std::array<Wheel<RPIHal>, 4> wheels{Wheel("f_left", newHal()), 
-  Wheel("f_right", newHal()), 
-  Wheel("b_left", newHal()), 
-  Wheel("b_right", newHal())}; 
+  std::array<Wheel<RPIHal>, 4> wheels{Wheel("f_left", newHal(Gpio::PIN6, Gpio::PIN26)), 
+  Wheel("f_right", newHal(Gpio::PIN16, Gpio::PIN19)), 
+  Wheel("b_left", newHal(Gpio::PIN20, Gpio::PIN21)), 
+  Wheel("b_right", newHal(Gpio::PIN21, Gpio::PIN6))}; 
   Car<RPIHal> c{wheels};
   while (!stop)
   {
