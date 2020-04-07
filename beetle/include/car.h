@@ -10,6 +10,7 @@
 #include <unistd.h>
 
 // C++ Standard Libs
+#include <array>
 #include <optional>
 #include <tuple>
 #include <string>
