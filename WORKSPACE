@@ -1,5 +1,5 @@
-BAZEL_VERSION = "1.2.0"
-BAZEL_VERSION_SHA = "34eb178663a9f9c6765db72dd58958cdac64c5f08dd51e5b67e28d466079bd1e"
+BAZEL_VERSION = "3.0.0"
+BAZEL_VERSION_SHA = "3efb903ef885339a271445a9940642df704f97297fbe268f131d4fe36b02ea80"
 
 load("//tools/workspace:default.bzl", "add_default_repositories")
 
