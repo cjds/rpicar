@@ -1,7 +1,11 @@
 cc_binary(
   name = "platform",
   srcs = glob(["src/*.cc"]),
-  deps = [":lib", "//holster:lib"]
+  deps = [
+      ":lib",
+      "//holster:lib",
+      "@org_llvm_libcxx//:libcxx",
+  ]
 )
 
 cc_library(
