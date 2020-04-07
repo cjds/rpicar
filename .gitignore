@@ -5,10 +5,7 @@
 compile_commands.json
 
 # Bazel Build Artifacts
-bazel-rpicar/
-bazel-out/
-bazel-bin/
-bazel-testlogs/
+/bazel-*
 
 # Code tags
 GPATH
