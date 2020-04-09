@@ -14,4 +14,8 @@ btx86() {
     bazel test //... --config x86
 }
 
+bcp() {
+    scp -r bazel-bin cjds@pi:/tmp
+}
+
 [[ -r "/usr/local/etc/profile.d/bash_completion.sh" ]] && . "/usr/local/etc/profile.d/bash_completion.sh"

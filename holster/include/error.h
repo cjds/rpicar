@@ -21,6 +21,11 @@ class Error
     {
       return error_.c_str();
     }
+
+    std::string getError() const
+    {
+      return error_;
+    }
   private:
     std::string error_;
 };

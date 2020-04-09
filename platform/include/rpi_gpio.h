@@ -8,6 +8,8 @@
 // C Standard Libs
 #include <fcntl.h>
 #include <unistd.h>
+#include <iostream>
+
 
 // C++ Standard Libs
 #include <chrono>
@@ -174,5 +176,17 @@ class RPIHal
 RPIHal newHal(Gpio p1, Gpio p2){
   auto [error, in1 ] = GpioPinControl::newControl(p1);
   auto [error2, in2 ] = GpioPinControl::newControl(p2);
+  if(error.has_value()){
+	  std::cout << error.value().getError() << std::endl;
+  }
+  if(error2.has_value()){
+	  std::cout << error2.value().getError() << std::endl;
+  }
+  if(in1.has_value()){
+	  std::cout << "BALUE" << std::endl;
+  }
+  if(in2.has_value()){
+	  std::cout << "BALU2E" << std::endl;
+  }
   return RPIHal(in1.value(), in2.value());
 }
