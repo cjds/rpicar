@@ -1,8 +1,12 @@
-build --crosstool_top=@rpi_bazel//tools/cc_toolchain:toolchain
-test --crosstool_top=@rpi_bazel//tools/cc_toolchain:toolchain
+build:pi --crosstool_top=@rpi_bazel//tools/cc_toolchain:toolchain
+test:pi --crosstool_top=@rpi_bazel//tools/cc_toolchain:toolchain
 
 build:pi --cpu=armeabihf
 test:pi --cpu=armeabihf
 
 build:pi --compiler=clang
 test:pi --compiler=clang
+
+
+build:x86 --cxxopt='-std=c++2a'
+test:x86 --cxxopt='-std=c++2a'
