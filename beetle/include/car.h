@@ -61,6 +61,22 @@ public:
   void update(const std::chrono::time_point<std::chrono::steady_clock>& time_point)
   {
     last_call_time = time_point;
+      for (auto& wheel: wheels)
+      {
+        wheel.update(time_point);
+      }
+  }
+
+  void setSpeed(const Vector2d& new_speed)
+  {
+    if (new_speed.getXMagnitude() > 0)
+    {
+      for (auto& wheel: wheels)
+      {
+	// TODO(Carl): change me
+        wheel.setSpeed(1);
+      }
+    }
   }
 private:
   std::chrono::time_point<std::chrono::steady_clock> last_call_time;

@@ -48,12 +48,12 @@ enum class GpioDirection
 class GpioPinControl
 {
   private:
-  explicit GpioPinControl(Gpio pin, gpiod_line *line):
+   explicit GpioPinControl(Gpio pin, gpiod_line *line):
     pin_(pin),
     exported_(true),
     line(line),
     pin_str_(std::to_string(static_cast<uint16_t>(pin)))
-  {}
+   {}
 
   public:
     static std::tuple<std::optional<Error>, std::optional<GpioPinControl>> newControl(const Gpio& pin)
@@ -141,12 +141,12 @@ class GpioPinControl
 
 class RPIHal
 {
- public:
-  RPIHal(const GpioPinControl& input1, const GpioPinControl& input2):
+   explicit RPIHal(const GpioPinControl& input1, const GpioPinControl& input2):
     input1_(input1),
     input2_(input2)
   {}
 
+public:
   void update(const int speed, const std::chrono::time_point<std::chrono::steady_clock>& time_point)
   {
     last_call_time = time_point;
@@ -165,23 +165,22 @@ class RPIHal
     }
   }
 
+
+static std::tuple<std::optional<Error>, std::optional<RPIHal>> newHal(const Gpio& p1,const Gpio& p2){
+  auto [error, in1 ] = GpioPinControl::newControl(p1);
+  auto [error2, in2 ] = GpioPinControl::newControl(p2);
+  if(error.has_value()){
+	  return std::make_tuple(make_error(error.value().getError()), std::nullopt);
+  }
+  if(error2.has_value()){
+	  return std::make_tuple(make_error(error2.value().getError()), std::nullopt);
+  }
+  in1.value().setDirection(GpioDirection::OUT);
+  in2.value().setDirection(GpioDirection::OUT);
+  return std::make_tuple(std::nullopt, RPIHal(in1.value(), in2.value()));
+}
  private:
   GpioPinControl input1_;
   GpioPinControl input2_;
   std::chrono::time_point<std::chrono::steady_clock> last_call_time;
 };
-
-
-RPIHal newHal(const Gpio& p1,const Gpio& p2){
-  auto [error, in1 ] = GpioPinControl::newControl(p1);
-  auto [error2, in2 ] = GpioPinControl::newControl(p2);
-  if(error.has_value()){
-	  std::cout << error.value().getError() << std::endl;
-  }
-  if(error2.has_value()){
-	  std::cout << error2.value().getError() << std::endl;
-  }
-  in1.value().setDirection(GpioDirection::OUT);
-  in2.value().setDirection(GpioDirection::OUT);
-  return RPIHal(in1.value(), in2.value());
-}

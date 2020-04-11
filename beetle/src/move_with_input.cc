@@ -4,6 +4,7 @@
  */
 
 #include "holster/include/mutex_queue.h"
+#include "holster/include/vector.h"
 #include "platform/include/rpi_gpio.h"
 #include "beetle/include/car.h"
 #include <array>
@@ -28,7 +29,7 @@ const bool compare_string_case_insensitive(const std::string& str1, const std::s
   return str1.size() == str2.size() && std::equal(str1.begin(), str1.end(), str2.begin(), [](auto a, auto b){return std::tolower(a)==std::tolower(b);});
 }
 
-void user_input_thread(int& stop, MutexQueue<uint8_t>& command_queue)
+void user_input_thread(int& stop, MutexQueue<Vector2d>& command_queue)
 {
   using namespace std::chrono_literals;
   while (!stop)
@@ -36,19 +37,19 @@ void user_input_thread(int& stop, MutexQueue<uint8_t>& command_queue)
     std::string output = ask_question("How do you want to move");
     if (compare_string_case_insensitive("W", output))
     {
-	command_queue.push(1);
+	command_queue.push(Vector2d(1,0));
     }
     else if (compare_string_case_insensitive("A", output))
     {
-	command_queue.push(2);
+	command_queue.push(Vector2d(0,1));
     }
     else if (compare_string_case_insensitive("S", output))
     {
-	command_queue.push(3);
+	command_queue.push(Vector2d(-1,0));
     }
     else if (compare_string_case_insensitive("D", output))
     {
-	command_queue.push(4);
+	command_queue.push(Vector2d(-1,0));
     }
     else
     {
@@ -59,18 +60,34 @@ void user_input_thread(int& stop, MutexQueue<uint8_t>& command_queue)
   }
 }
 
-void car_thread(int& stop, MutexQueue<uint8_t>& command_queue)
+void car_thread(int& stop, MutexQueue<Vector2d>& command_queue)
 {
   using namespace std::chrono_literals;
-  std::array<Wheel<RPIHal>, 4> wheels{Wheel("f_left", newHal(Gpio::PIN6, Gpio::PIN26)),
-  Wheel("f_right", newHal(Gpio::PIN16, Gpio::PIN19)),
-  Wheel("b_left", newHal(Gpio::PIN20, Gpio::PIN21)),
-  Wheel("b_right", newHal(Gpio::PIN21, Gpio::PIN6))};
+  auto [error, rpi_f_left] = RPIHal::newHal(Gpio::PIN6, Gpio::PIN26);
+  auto [error2, rpi_f_right] = RPIHal::newHal(Gpio::PIN6, Gpio::PIN26);
+  auto [error3, rpi_b_left] = RPIHal::newHal(Gpio::PIN6, Gpio::PIN26);
+  auto [error4, rpi_b_right] = RPIHal::newHal(Gpio::PIN6, Gpio::PIN26);
+  std::array<Wheel<RPIHal>, 4> wheels{Wheel("f_left", rpi_f_left.value()),
+  Wheel("f_right", rpi_f_right.value()),
+  Wheel("b_left", rpi_b_left.value()),
+  Wheel("b_right", rpi_b_right.value())};
   Car<RPIHal> c{wheels};
+  Vector2d current_command{0, 0};
   while (!stop)
   {
-    if (command_queue.size() > 0) std::cout << std::to_string(command_queue.pop()) << std::endl;
+    if (command_queue.size() > 0)
+    {
+      std::optional<Vector2d> queued= command_queue.pop();
+      if(queued.has_value())
+      {
+	current_command = queued.value();
+        std::cout << current_command.to_str() << std::endl;
+      }
+    }
     std::this_thread::sleep_for(2ms);
+    c.setSpeed(current_command);
+    c.update(std::chrono::time_point<std::chrono::high_resolution_clock>());
+
   }
 }
 
@@ -79,7 +96,7 @@ void signal_handler(int signal) { shutdown_handler(signal); }
 
 int main()
 {
-  MutexQueue<uint8_t> command_queue;
+  MutexQueue<Vector2d> command_queue;
   int stop = 0;
   signal(SIGINT, signal_handler);
   shutdown_handler = [&stop](int signum){

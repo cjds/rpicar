@@ -2,6 +2,7 @@
  * @author Carl Saldanha <cjds92@gmail.com>
  * @brief A Mutexed Queue
  */
+#include <optional>
 #include <mutex>
 #include <queue>
 
@@ -18,18 +19,18 @@ public:
     m_queue.push(value);
   }
 
-  T pop()
+  std::optional<T> pop()
   {
     if (m_queue.size() >0)
     {
       std::lock_guard<std::mutex> lock(m_mutex);
       T& result = m_queue.front();
       m_queue.pop();
-      return result;
+      return std::make_optional(result);
     }
     else
     {
-	return static_cast<T>(0);
+	return std::nullopt;
     }
   }
 
