@@ -6,8 +6,6 @@
 #include "holster/include/error.h"
 #include <gpiod.h>
 
-#include <linux/gpio.h>
-
 
 // C Standard Libs
 #include <fcntl.h>
@@ -68,7 +66,7 @@ public:
 
   ~GpioChip()
   {
-    gpiod_chip_close(chip_);
+//    gpiod_chip_close(chip_);
   }
 
 private:
@@ -82,7 +80,7 @@ private:
 class GpioPinControl
 {
   private:
-   GpioPinControl(Gpio pin, gpiod_line *line):
+   GpioPinControl(Gpio pin, gpiod_line* line):
     pin_(pin),
     exported_(true),
     line(line),
@@ -115,18 +113,18 @@ class GpioPinControl
     std::optional<Error> setDirection(GpioDirection direction)
     {
       int ret;
-      if (direction == GpioDirection::IN)
+      if (direction == GpioDirection::OUT)
       {
 	ret = gpiod_line_request_output(line, pin_str_.c_str(), 0);
 	if (ret < 0) {
 	  return make_error("Request line as output failed\n");
 	}
       }
-      else if (direction == GpioDirection::OUT)
+      else if (direction == GpioDirection::IN)
       {
 	ret = gpiod_line_request_input(line, pin_str_.c_str());
 	if (ret < 0) {
-	  return make_error("Request line as output failed\n");
+	  return make_error("Request line as input failed\n");
 	}
       }
       return std::nullopt;
