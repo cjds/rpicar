@@ -15,6 +15,7 @@ btx86() {
 }
 
 bcp() {
+    ssh cjds@pi 'rm -rf /tmp/bazel-bin'
     scp -r bazel-bin cjds@pi:/tmp
 }
 

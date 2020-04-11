@@ -1,12 +1,12 @@
 # -*- python -*-
 
-load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
 
 def rpi_bazel_repository(name):
-   commit = "65e9ae275849108b0fce7328d91e7c24b39f28c2"
-   http_archive(
+    commit = "8e81769f2f0ab5de3ae22977082d4814e9f27204"
+    git_repository(
        name = name,
-       url = "https://github.com/mjbots/rpi_bazel/archive/{}.zip".format(commit),
-       sha256 = "d478c502df0d87d3bdff12a024d2ea138af055e47515b00dfd9271be6cf3e290",
-       strip_prefix = "rpi_bazel-{}".format(commit),
-   )
+       remote = "https://github.com/cjds/rpi_bazel.git",
+       commit = commit,
+#       strip_prefix = "rpi_bazel-{}".format(commit),
+    )
