@@ -48,47 +48,30 @@ enum class GpioDirection
 class GpioPinControl
 {
   private:
-  explicit GpioPinControl(Gpio pin):
+  explicit GpioPinControl(Gpio pin, gpiod_line *line):
     pin_(pin),
-    exported_(true)
+    exported_(true),
+    line(line),
+    pin_str_(std::to_string(static_cast<uint16_t>(pin)))
   {}
 
   public:
     static std::tuple<std::optional<Error>, std::optional<GpioPinControl>> newControl(const Gpio& pin)
     {
-/*
-      // Export the desired pin by writing to /sys/class/gpio/export
-      std::ofstream output_file;
-      output_file.open("/sys/class/gpio/export");
-      if (not output_file.is_open()) {
-        return std::make_tuple(make_error("Error opening /sys/class/gpio/export"), std::nullopt);
-      }
-      output_file << pin_str.c_str() << std::endl;
-      output_file.close();
-
-      std::ofstream value_file;
-      value_file.open("/sys/class/gpio/" + pin_str + "/value");
-      if (not value_file.is_open()) {
-        return std::make_tuple(make_error("Error opening /sys/class/gpio/" + pin_str + "/value"), std::nullopt);
-      }
-      value_file << "0" << std::endl;
-      value_file.close();
-*/
       std::string gpio_chip = "gpiochip0";
-	struct gpiod_chip *chip;
-	struct gpiod_line *line;
+      struct gpiod_chip *chip;
+      struct gpiod_line *line;
 
       std::string pin_str = std::to_string(static_cast<uint16_t>(pin));
-	chip = gpiod_chip_open_by_name(gpio_chip.c_str());
-	if (!chip) {
+      chip = gpiod_chip_open_by_name(gpio_chip.c_str());
+      if (!chip) {
         return std::make_tuple(make_error("Opening chip failed"), std::nullopt);
-	}
-
-	line = gpiod_chip_get_line(chip, static_cast<unsigned int>(pin));
-	if (!line) {
-          return std::make_tuple(make_error("Get line failed"), std::nullopt);
-	}
-      return std::make_tuple(std::nullopt, std::optional<GpioPinControl>(GpioPinControl(pin)));
+      }
+      line = gpiod_chip_get_line(chip, static_cast<unsigned int>(pin));
+      if (!line) {
+        return std::make_tuple(make_error("Get line failed"), std::nullopt);
+      }
+      return std::make_tuple(std::nullopt, std::optional<GpioPinControl>(GpioPinControl(pin, line)));
     };
 
     Gpio getPin()
@@ -99,70 +82,50 @@ class GpioPinControl
     ~GpioPinControl()
     {
       if (exported_) { Error("GPIO Already released").throw_error(); }
+      release();
     }
   
     std::optional<Error> setDirection(GpioDirection direction)
     {
-      std::string pin_str = std::to_string(static_cast<uint16_t>(pin_));
-      if (not exported_) return make_error("GPIO Already released");
-      std::ofstream direction_file;
-      direction_file.open("/sys/class/gpio/" + pin_str+ "/direction");
-      if (not direction_file.is_open()) 
-      {
-        return make_error("Error writing to GPIO direction"); 
-      }
+      int ret;
       if (direction == GpioDirection::IN)
       {
-        direction_file << "in";
+	ret = gpiod_line_request_output(line, pin_str_.c_str(), 0);
+	if (ret < 0) {
+	  return make_error("Request line as output failed\n");
+	}
       }
-      else
+      else if (direction == GpioDirection::OUT)
       {
-        direction_file << "out";
+	ret = gpiod_line_request_input(line, pin_str_.c_str());
+	if (ret < 0) {
+	  return make_error("Request line as output failed\n");
+	}
       }
-      direction_file.close();
-      return std::nullopt; 
+      return std::nullopt;
     }
   
     std::optional<Error> setValue(bool value)
     { 
-      std::string pin_str = std::to_string(static_cast<uint16_t>(pin_));
       if (not exported_) return make_error("GPIO Already released");
-      /*
-      char output_value[1] = {'1'};
-      if (write(value_filedescriptor_, output_value, 3) != 3) {
+      int ret = gpiod_line_set_value(line, value);
+      if (ret < 0) {
         return make_error("Error setting value to file descriptor");
-      }*/
+      }
       return std::nullopt; 
     }
   
     std::tuple<std::optional<Error>, bool> getValue()
     {
-      bool value = false;
-      std::string pin_str = std::to_string(static_cast<uint16_t>(pin_));
-      if (not exported_) return std::make_tuple(make_error("GPIO Already released"), false);
-      std::ifstream value_file;
-      value_file.open("/sys/class/gpio/" + pin_str + "/value");
-      char a[1];
-      if (not value_file.is_open()) 
-      {
-        return std::make_tuple(make_error("Error writing to GPIO direction"), false); 
-      }
-      while(!value_file.eof())
-      {
-	value_file >> a;
-      }
-      if (std::strcmp(a, "1")) value = true;
-      return std::make_tuple(std::nullopt, value);
+      int value;
+      if (not exported_) return make_tuple(make_error("GPIO Already released"), false);
+      value = gpiod_line_get_value(line);
+      return std::make_tuple(std::nullopt, value); 
     }
 
     std::optional<Error> release()
     {
-      int fd = open("/sys/class/gpio/unexport", O_WRONLY);
-      if (fd == -1) return make_error("Release failed");
-      if (write(fd, std::to_string(static_cast<uint8_t>(pin_)).c_str(), 2) != 2) {
-	return make_error("Writing export failed");
-      }
-      close(fd);
+      gpiod_line_release(line);
       exported_ = false;
       return std::nullopt;
     }
@@ -170,6 +133,9 @@ class GpioPinControl
   private:
     const Gpio pin_;
     bool exported_;
+    gpiod_line* line;
+    std::string pin_str_;
+
 };
 
 
@@ -214,12 +180,6 @@ RPIHal newHal(const Gpio& p1,const Gpio& p2){
   }
   if(error2.has_value()){
 	  std::cout << error2.value().getError() << std::endl;
-  }
-  if(in1.has_value()){
-	  std::cout << "BALUE" << std::endl;
-  }
-  if(in2.has_value()){
-	  std::cout << "BALU2E" << std::endl;
   }
   in1.value().setDirection(GpioDirection::OUT);
   in2.value().setDirection(GpioDirection::OUT);
