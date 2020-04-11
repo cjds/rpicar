@@ -62,11 +62,14 @@ void user_input_thread(int& stop, MutexQueue<Vector2d>& command_queue)
 
 void car_thread(int& stop, MutexQueue<Vector2d>& command_queue)
 {
+  auto [chiperr, gcopt] = GpioChip::newChip("gpiochip0");
+  if (chiperr.has_value()) std::cout << chiperr.value().getError() << std::endl;
+  auto gc = gcopt.value();
   using namespace std::chrono_literals;
-  auto [error, rpi_f_left] = RPIHal::newHal(Gpio::PIN6, Gpio::PIN26);
-  auto [error2, rpi_f_right] = RPIHal::newHal(Gpio::PIN6, Gpio::PIN26);
-  auto [error3, rpi_b_left] = RPIHal::newHal(Gpio::PIN6, Gpio::PIN26);
-  auto [error4, rpi_b_right] = RPIHal::newHal(Gpio::PIN6, Gpio::PIN26);
+  auto [error, rpi_f_left] = RPIHal::newHal(gc, Gpio::PIN6, Gpio::PIN19);
+  auto [error2, rpi_f_right] = RPIHal::newHal(gc, Gpio::PIN4, Gpio::PIN17);
+  auto [error3, rpi_b_left] = RPIHal::newHal(gc, Gpio::PIN13, Gpio::PIN26);
+  auto [error4, rpi_b_right] = RPIHal::newHal(gc, Gpio::PIN22, Gpio::PIN27);
   std::array<Wheel<RPIHal>, 4> wheels{Wheel("f_left", rpi_f_left.value()),
   Wheel("f_right", rpi_f_right.value()),
   Wheel("b_left", rpi_b_left.value()),

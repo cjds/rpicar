@@ -19,4 +19,7 @@ bcp() {
     scp -r bazel-bin cjds@pi:/tmp
 }
 
+s() {
+    ssh cjds@pi
+}
 [[ -r "/usr/local/etc/profile.d/bash_completion.sh" ]] && . "/usr/local/etc/profile.d/bash_completion.sh"

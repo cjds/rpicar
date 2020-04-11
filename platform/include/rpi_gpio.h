@@ -28,13 +28,17 @@ enum class Gpio: unsigned int
 {
   PIN1 = 1,
   PIN2 = 2,
+  PIN4 = 4,
   PIN6 = 6,
   PIN13 = 13,
   PIN16 = 16,
+  PIN17 = 17,
   PIN19 = 19,
   PIN20 = 20,
   PIN21 = 21,
+  PIN22 = 22,
   PIN26 = 26,
+  PIN27 = 27,
 };
 
 
@@ -44,11 +48,41 @@ enum class GpioDirection
   OUT = 1
 };
 
+class GpioChip
+{
+public:
+  static std::tuple<std::optional<Error>, std::optional<GpioChip>> newChip(const std::string& chipname)
+  {
+    gpiod_chip* chip = gpiod_chip_open_by_name(chipname.c_str());
+    if (!chip) {
+        return std::make_tuple(make_error("Chip open failed"), std::nullopt);
+    }
+    return std::make_tuple(std::nullopt, GpioChip(gpiod_chip_open_by_name(chipname.c_str())));
+    
+  }
+
+  gpiod_chip* getGpioChip() const
+  {
+    return chip_;
+  }
+
+  ~GpioChip()
+  {
+    gpiod_chip_close(chip_);
+  }
+
+private:
+  GpioChip(gpiod_chip* chip):
+    chip_(chip)
+  {}
+
+  gpiod_chip* chip_;
+};
 
 class GpioPinControl
 {
   private:
-   explicit GpioPinControl(Gpio pin, gpiod_line *line):
+   GpioPinControl(Gpio pin, gpiod_line *line):
     pin_(pin),
     exported_(true),
     line(line),
@@ -56,18 +90,11 @@ class GpioPinControl
    {}
 
   public:
-    static std::tuple<std::optional<Error>, std::optional<GpioPinControl>> newControl(const Gpio& pin)
+    static std::tuple<std::optional<Error>, std::optional<GpioPinControl>> newControl(const Gpio& pin, const GpioChip& chip)
     {
-      std::string gpio_chip = "gpiochip0";
-      struct gpiod_chip *chip;
       struct gpiod_line *line;
-
       std::string pin_str = std::to_string(static_cast<uint16_t>(pin));
-      chip = gpiod_chip_open_by_name(gpio_chip.c_str());
-      if (!chip) {
-        return std::make_tuple(make_error("Opening chip failed"), std::nullopt);
-      }
-      line = gpiod_chip_get_line(chip, static_cast<unsigned int>(pin));
+      line = gpiod_chip_get_line(chip.getGpioChip(), static_cast<unsigned int>(pin));
       if (!line) {
         return std::make_tuple(make_error("Get line failed"), std::nullopt);
       }
@@ -166,9 +193,9 @@ public:
   }
 
 
-static std::tuple<std::optional<Error>, std::optional<RPIHal>> newHal(const Gpio& p1,const Gpio& p2){
-  auto [error, in1 ] = GpioPinControl::newControl(p1);
-  auto [error2, in2 ] = GpioPinControl::newControl(p2);
+static std::tuple<std::optional<Error>, std::optional<RPIHal>> newHal(const GpioChip& chip, const Gpio& p1,const Gpio& p2){
+  auto [error, in1 ] = GpioPinControl::newControl(p1, chip);
+  auto [error2, in2 ] = GpioPinControl::newControl(p2, chip);
   if(error.has_value()){
 	  return std::make_tuple(make_error(error.value().getError()), std::nullopt);
   }
