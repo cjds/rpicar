@@ -89,7 +89,7 @@ void car_thread(int& stop, MutexQueue<Vector2d>& command_queue)
     }
     std::this_thread::sleep_for(2ms);
     c.setSpeed(current_command);
-    c.update(std::chrono::time_point<std::chrono::high_resolution_clock>());
+    c.update(std::chrono::steady_clock::now());
 
   }
 }
