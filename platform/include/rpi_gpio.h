@@ -49,11 +49,12 @@ enum class GpioDirection
 class GpioChip
 {
 public:
-  static std::tuple<std::optional<Error>, std::optional<GpioChip>> newChip(const std::string& chipname)
+  static const std::tuple<std::optional<Error>, std::optional<GpioChip>> newChip(const std::string& chipname)
   {
     gpiod_chip* chip = gpiod_chip_open_by_name(chipname.c_str());
-    if (!chip) {
-        return std::make_tuple(make_error("Chip open failed"), std::nullopt);
+    if (!chip)
+    {
+      return std::make_tuple(make_error("Chip open failed"), std::nullopt);
     }
     return std::make_tuple(std::nullopt, GpioChip(gpiod_chip_open_by_name(chipname.c_str())));
     
