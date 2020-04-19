@@ -6,5 +6,6 @@ py_binary(
 
 filegroup(
   name="data",
-  srcs=["index.html"],
+  srcs=["index.html", "index.js"],
+  data=["index.html", "index.js"],
 )
