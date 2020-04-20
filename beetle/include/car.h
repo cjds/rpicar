@@ -22,7 +22,7 @@ template<class HAL>
 class Wheel
 {
 public:
-  Wheel(const std::string& name, const HAL& hal):
+  Wheel(const std::string& name, HAL& hal):
   name_(name),
   wheel_controller{hal}
   {}
@@ -76,6 +76,8 @@ public:
 	// TODO(Carl): change me
         wheel.setSpeed(1);
       }
+        wheels[3].setSpeed(0);
+        wheels[2].setSpeed(0);
     }
   }
 private:

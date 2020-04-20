@@ -9,7 +9,6 @@
 
 int main()
 {
-    // 26 LED PIN
     auto gc = getErrorOrDie(GpioChip::newChip("gpiochip0"));
     auto gpio_control1 = getErrorOrDie(GpioPinControl::newControl(Gpio::PIN6, gc));
     dieIfError(gpio_control1.setDirection(GpioDirection::OUT));
@@ -30,6 +29,15 @@ int main()
     dieIfError(gpio_control8.setDirection(GpioDirection::OUT));
 
     uint8_t number_of_times = 10;
+
+    gpio_control1.setValue(false);
+    gpio_control2.setValue(false);
+    gpio_control3.setValue(false);
+    gpio_control4.setValue(false);
+    gpio_control5.setValue(false);
+    gpio_control6.setValue(false);
+    gpio_control7.setValue(false);
+    gpio_control8.setValue(false);
     
     for (uint8_t i=0; i< number_of_times; i++)
     {

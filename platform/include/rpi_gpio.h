@@ -81,7 +81,7 @@ private:
 class GpioPinControl
 {
   private:
-   GpioPinControl(Gpio pin, gpiod_line* line):
+   GpioPinControl(Gpio pin, std::shared_ptr<gpiod_line*> line):
     pin_(pin),
     exported_(true),
     line(line),
@@ -97,7 +97,7 @@ class GpioPinControl
       if (!line) {
         return std::make_tuple(make_error("Get line failed"), std::nullopt);
       }
-      return std::make_tuple(std::nullopt, std::optional<GpioPinControl>(GpioPinControl(pin, line)));
+      return std::make_tuple(std::nullopt, std::optional(GpioPinControl(pin, std::make_shared<gpiod_line*>(line))));
     };
 
     Gpio getPin()
@@ -108,7 +108,7 @@ class GpioPinControl
     ~GpioPinControl()
     {
       if (exported_) { Error("GPIO Already released").throw_error(); }
-      release();
+      //release();
     }
   
     std::optional<Error> setDirection(GpioDirection direction)
@@ -116,14 +116,14 @@ class GpioPinControl
       int ret;
       if (direction == GpioDirection::OUT)
       {
-	ret = gpiod_line_request_output(line, pin_str_.c_str(), 0);
+	ret = gpiod_line_request_output(*line, pin_str_.c_str(), 0);
 	if (ret < 0) {
 	  return make_error("Request line as output failed\n");
 	}
       }
       else if (direction == GpioDirection::IN)
       {
-	ret = gpiod_line_request_input(line, pin_str_.c_str());
+	ret = gpiod_line_request_input(*line, pin_str_.c_str());
 	if (ret < 0) {
 	  return make_error("Request line as input failed\n");
 	}
@@ -134,7 +134,7 @@ class GpioPinControl
     std::optional<Error> setValue(bool value)
     { 
       if (not exported_) return make_error("GPIO Already released");
-      int ret = gpiod_line_set_value(line, value);
+      int ret = gpiod_line_set_value(*line, value);
       if (ret < 0) {
         return make_error("Error setting value to file descriptor");
       }
@@ -145,13 +145,13 @@ class GpioPinControl
     {
       int value;
       if (not exported_) return make_tuple(make_error("GPIO Already released"), false);
-      value = gpiod_line_get_value(line);
+      value = gpiod_line_get_value(*line);
       return std::make_tuple(std::nullopt, value); 
     }
 
     std::optional<Error> release()
     {
-      gpiod_line_release(line);
+      gpiod_line_release(*line);
       exported_ = false;
       return std::nullopt;
     }
@@ -159,7 +159,7 @@ class GpioPinControl
   private:
     const Gpio pin_;
     bool exported_;
-    gpiod_line* line;
+    std::shared_ptr<gpiod_line*> line;
     std::string pin_str_;
 
 };
@@ -167,7 +167,7 @@ class GpioPinControl
 
 class RPIHal
 {
-   explicit RPIHal(const GpioPinControl& input1, const GpioPinControl& input2):
+   explicit RPIHal(const std::shared_ptr<GpioPinControl>& input1, const std::shared_ptr<GpioPinControl>& input2):
     input1_(input1),
     input2_(input2)
   {}
@@ -176,18 +176,22 @@ public:
   void update(const int speed, const std::chrono::time_point<std::chrono::steady_clock>& time_point)
   {
     last_call_time = time_point;
-    // std::optional<Error> _;
+    if (speed != previous_speed_)
+    {
+      std::cout << speed << std::endl;
     if (speed > 0) {
-	input1_.setValue(1);
-	input2_.setValue(0);
+	dieIfError(input1_->setValue(1));
+	dieIfError(input2_->setValue(1));
     }
     else if (speed < 0) {
-	input1_.setValue(0);
-	input2_.setValue(1);
+	dieIfError(input1_->setValue(1));
+	dieIfError(input2_->setValue(1));
     }
     else {
-	input1_.setValue(0);
-	input2_.setValue(0);
+	input1_->setValue(0);
+	input2_->setValue(0);
+    }
+    previous_speed_=speed;
     }
   }
 
@@ -201,12 +205,13 @@ static std::tuple<std::optional<Error>, std::optional<RPIHal>> newHal(const Gpio
   if(error2.has_value()){
 	  return std::make_tuple(make_error(error2.value().getError()), std::nullopt);
   }
-  in1.value().setDirection(GpioDirection::OUT);
-  in2.value().setDirection(GpioDirection::OUT);
-  return std::make_tuple(std::nullopt, RPIHal(in1.value(), in2.value()));
+  dieIfError(in1.value().setDirection(GpioDirection::OUT));
+  dieIfError(in2.value().setDirection(GpioDirection::OUT));
+  return std::make_tuple(std::nullopt, RPIHal(std::make_shared<GpioPinControl>(in1.value()), std::make_shared<GpioPinControl>(in2.value())));
 }
  private:
-  GpioPinControl input1_;
-  GpioPinControl input2_;
+ const std::shared_ptr<GpioPinControl> input1_;
+ const std::shared_ptr<GpioPinControl> input2_;
+  int previous_speed_ =2;
   std::chrono::time_point<std::chrono::steady_clock> last_call_time;
 };
