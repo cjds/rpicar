@@ -61,26 +61,50 @@ public:
   void update(const std::chrono::time_point<std::chrono::steady_clock>& time_point)
   {
     last_call_time = time_point;
-      for (auto& wheel: wheels)
-      {
-        wheel.update(time_point);
-      }
+    for (auto& wheel: wheels)
+    {
+      wheel.update(time_point);
+    }
   }
 
   void setSpeed(const Vector2d& new_speed)
   {
-    if (new_speed.getXMagnitude() > 0)
+    // TODO(Carl): change me currently a really stupid front wheel drive
+    wheels[2].setSpeed(0);
+    wheels[3].setSpeed(0);
+    if (new_speed.getYMagnitude() == 0)
     {
-      for (auto& wheel: wheels)
+      if (new_speed.getXMagnitude() == 0)
       {
-	// TODO(Carl): change me
-        wheel.setSpeed(1);
+        wheels[0].setSpeed(0);
+        wheels[1].setSpeed(0);
       }
-        wheels[3].setSpeed(0);
-        wheels[2].setSpeed(0);
+      else if (new_speed.getXMagnitude() > 0)
+      {
+        wheels[0].setSpeed(1);
+        wheels[1].setSpeed(1);
+      }
+      else
+      {
+        wheels[0].setSpeed(-1);
+        wheels[1].setSpeed(-1);
+      }
+    }
+    else
+    {
+      if (new_speed.getYMagnitude() < 0)
+      {
+        wheels[1].setSpeed(-1);
+        wheels[0].setSpeed(1);
+      }
+      else if (new_speed.getYMagnitude() > 0)
+      {
+        wheels[0].setSpeed(-1);
+        wheels[1].setSpeed(1);
+      }
     }
   }
 private:
   std::chrono::time_point<std::chrono::steady_clock> last_call_time;
-  std::array<Wheel<HAL>, 4> wheels;
+  std::array<Wheel<HAL>, 4> wheels;// f_left, f_right, b_left, b_right
 };

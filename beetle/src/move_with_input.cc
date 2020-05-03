@@ -14,6 +14,7 @@
 #include <signal.h>
 #include <functional>
 
+using Command = std::tuple<Vector2d, std::chrono::time_point<std::chrono::steady_clock>>;
 
 const std::string ask_question(const std::string& question)
 {
@@ -29,7 +30,7 @@ const bool compare_string_case_insensitive(const std::string& str1, const std::s
   return str1.size() == str2.size() && std::equal(str1.begin(), str1.end(), str2.begin(), [](auto a, auto b){return std::tolower(a)==std::tolower(b);});
 }
 
-void user_input_thread(int& stop, MutexQueue<Vector2d>& command_queue)
+void user_input_thread(int& stop, MutexQueue<Command>& command_queue)
 {
   using namespace std::chrono_literals;
   while (!stop)
@@ -37,19 +38,19 @@ void user_input_thread(int& stop, MutexQueue<Vector2d>& command_queue)
     std::string output = ask_question("How do you want to move");
     if (compare_string_case_insensitive("W", output))
     {
-	command_queue.push(Vector2d(1,0));
+	command_queue.push(std::make_tuple(Vector2d(1, 0), std::chrono::steady_clock::now()));
     }
     else if (compare_string_case_insensitive("A", output))
     {
-	command_queue.push(Vector2d(0,1));
+	command_queue.push(std::make_tuple(Vector2d(0, 1), std::chrono::steady_clock::now()));
     }
     else if (compare_string_case_insensitive("S", output))
     {
-	command_queue.push(Vector2d(-1,0));
+	command_queue.push(std::make_tuple(Vector2d(-1, 0), std::chrono::steady_clock::now()));
     }
     else if (compare_string_case_insensitive("D", output))
     {
-	command_queue.push(Vector2d(-1,0));
+	command_queue.push(std::make_tuple(Vector2d(0, -1), std::chrono::steady_clock::now()));
     }
     else
     {
@@ -60,35 +61,44 @@ void user_input_thread(int& stop, MutexQueue<Vector2d>& command_queue)
   }
 }
 
-void car_thread(int& stop, MutexQueue<Vector2d>& command_queue)
+void car_thread(int& stop, MutexQueue<Command>& command_queue)
 {
   using namespace std::chrono_literals;
   auto gc = getErrorOrDie(GpioChip::newChip("gpiochip0"));
-  auto rpi_f_left = getErrorOrDie(RPIHal::newHal(gc, Gpio::PIN6, Gpio::PIN13));
-  auto rpi_f_right= getErrorOrDie(RPIHal::newHal(gc, Gpio::PIN4, Gpio::PIN17));
-  auto rpi_b_left = getErrorOrDie(RPIHal::newHal(gc, Gpio::PIN19, Gpio::PIN26));
+  // Front Right Wheel
+  auto rpi_f_right = getErrorOrDie(RPIHal::newHal(gc, Gpio::PIN6, Gpio::PIN13));
+  // Front left wheel
+  auto rpi_f_left = getErrorOrDie(RPIHal::newHal(gc, Gpio::PIN26, Gpio::PIN19));
   auto rpi_b_right = getErrorOrDie(RPIHal::newHal(gc, Gpio::PIN22, Gpio::PIN27));
+  auto rpi_b_left= getErrorOrDie(RPIHal::newHal(gc, Gpio::PIN4, Gpio::PIN17));
   std::array<Wheel<RPIHal>, 4> wheels{Wheel("f_left", rpi_f_left),
     Wheel("f_right", rpi_f_right),
     Wheel("b_left", rpi_b_left),
     Wheel("b_right", rpi_b_right)};
   Car<RPIHal> c{wheels};
-  Vector2d current_command{0, 0};
+  Vector2d current_speed{0, 0};
+  std::chrono::time_point<std::chrono::steady_clock> last_time_point = std::chrono::steady_clock::now();
   while (!stop)
   {
     if (command_queue.size() > 0)
     {
-      std::optional<Vector2d> queued= command_queue.pop();
+      std::optional<Command> queued= command_queue.pop();
       if(queued.has_value())
       {
-	current_command = queued.value();
-        std::cout << current_command.to_str() << std::endl;
+	current_speed = std::get<0>(queued.value());
+	last_time_point = std::get<1>(queued.value());
       }
     }
+    if (std::chrono::steady_clock::now() - last_time_point > 500ms)
+    {
+      c.setSpeed(Vector2d{0,0});
+    }
+    else
+    {
+      c.setSpeed(current_speed);
+    }
     std::this_thread::sleep_for(2ms);
-    c.setSpeed(current_command);
     c.update(std::chrono::steady_clock::now());
-
   }
 }
 
@@ -97,7 +107,7 @@ void signal_handler(int signal) { shutdown_handler(signal); }
 
 int main()
 {
-  MutexQueue<Vector2d> command_queue;
+  MutexQueue<Command> command_queue;
   int stop = 0;
   signal(SIGINT, signal_handler);
   shutdown_handler = [&stop](int signum){

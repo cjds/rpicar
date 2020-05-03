@@ -181,10 +181,10 @@ public:
       std::cout << speed << std::endl;
     if (speed > 0) {
 	dieIfError(input1_->setValue(1));
-	dieIfError(input2_->setValue(1));
+	dieIfError(input2_->setValue(0));
     }
     else if (speed < 0) {
-	dieIfError(input1_->setValue(1));
+	dieIfError(input1_->setValue(0));
 	dieIfError(input2_->setValue(1));
     }
     else {
@@ -210,8 +210,8 @@ static std::tuple<std::optional<Error>, std::optional<RPIHal>> newHal(const Gpio
   return std::make_tuple(std::nullopt, RPIHal(std::make_shared<GpioPinControl>(in1.value()), std::make_shared<GpioPinControl>(in2.value())));
 }
  private:
- const std::shared_ptr<GpioPinControl> input1_;
- const std::shared_ptr<GpioPinControl> input2_;
-  int previous_speed_ =2;
+  const std::shared_ptr<GpioPinControl> input1_;
+  const std::shared_ptr<GpioPinControl> input2_;
+  int previous_speed_=0;
   std::chrono::time_point<std::chrono::steady_clock> last_call_time;
 };
