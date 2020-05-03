@@ -2,7 +2,7 @@ py_binary(
   name="server",
   srcs=["server.py"],
   data=[":data"],
-  )
+)
 
 filegroup(
   name="data",

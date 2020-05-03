@@ -1,4 +1,4 @@
-load("//tools/workspace:rpi_bazel/repository.bzl", "rpi_bazel_repository")
+load("//build-tools/workspace:rpi_bazel/repository.bzl", "rpi_bazel_repository")
 
 def add_default_repositories(excludes = []):
     if "rpi_bazel" not in excludes:

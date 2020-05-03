@@ -1,4 +1,6 @@
 #!/usr/bin/env python
+# @author Carl Saldanha <cjds92@gmail.com>
+# @brief Web server to help move the robot
 
 from http.server import BaseHTTPRequestHandler, HTTPServer 
 from os import curdir, sep
