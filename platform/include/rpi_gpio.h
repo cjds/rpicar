@@ -20,6 +20,7 @@
 #include <optional>
 #include <tuple>
 #include <string>
+#include <memory>
 
 
 enum class Gpio: unsigned int
