@@ -17,6 +17,15 @@ RUN wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key|apt-key add -
 RUN echo "deb [arch=amd64] https://storage.googleapis.com/bazel-apt stable jdk1.8" | tee /etc/apt/sources.list.d/bazel.list
 RUN apt update && DEBIAN_FRONTEND=noninteractive apt install --yes neovim bazel valgrind cppcheck wget clang-10 lldb-10 lld-10 libtinfo5 libgpiod-dev
 RUN echo "source /rpicar/helpers.bash">> ~/.bashrc
-RUN echo "source ~/.git-completions.bash">> ~/.bashrc
+RUN echo "source ~/.git-completion.bash">> ~/.bashrc
+
+# Temp fix for this issue
+# https://github.com/bazelbuild/bazel/issues/11554
+RUN apt install -y python-is-python3
+RUN curl -sL https://deb.nodesource.com/setup_14.x | bash -
+
+RUN apt install -y nodejs
+RUN npm install -g typescript
+RUN npm install -g  parcel-bundler
 
 WORKDIR /rpicar
