@@ -88,7 +88,7 @@ class myHandler(BaseHTTPRequestHandler):
 if __name__ == "__main__":
     try:
         with open('lorem_copy.txt', 'r+') as f:
-            with contextlib.closing(mmap.mmap(f.fileno(), 0, access=mmap.ACCESS_WRITE)) as m:
+            with contextlib.closing(mmap.mmap(f.fileno(), 0, mmap.MAP_SHARED, access=mmap.ACCESS_WRITE)) as m:
                 m.seek(0) # rewind
                 #Create a web server and define the handler to manage the
                 #incoming request
