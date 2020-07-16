@@ -9,5 +9,6 @@
 
 int main()
 {
+    auto t = MmapStateMachine::createMapStateMachine("/tmp/daygeek.txt", 5);
     return 0;
 }

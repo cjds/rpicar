@@ -1,8 +1,15 @@
+config_setting(
+    name = "pi",
+    values = {"cpu": "armeabihf"},
+)
+
 cc_library(
   name = "lib",
   srcs = glob(["src/*.cc"]),
   hdrs = glob(["include/*.h", "include/*.hpp"]),
-  deps = ["@boost//:iostreams", "@org_llvm_libcxx//:libcxx"],
+  deps = select({
+		  ":pi": ["@boost//:iostreams", "@org_llvm_libcxx//:libcxx"],
+  		  "//conditions:default":["@boost//:iostreams" ]}),
   visibility = ["//visibility:public"],
 )
 

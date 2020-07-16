@@ -6,6 +6,7 @@
 #ifndef HOLSTER_INCLUDE_MMAP_MANAGEMENT
 #define HOLSTER_INCLUDE_MMAP_MANAGEMENT
 
+#include <cstdlib>
 #include "error.h"
 #include <iostream>
 #include <boost/iostreams/device/mapped_file.hpp>
@@ -16,7 +17,7 @@ class MmapStateMachine
   public:
     static std::optional<Error> createMapStateMachine(const std::string& file_name, int number_of_bytes)
     {
-
+      boost::iostreams::mapped_file mmap(file_name.c_str(), boost::iostreams::mapped_file::readonly);
       return Error{"SSSSSSSSS"};
     }
   private:
