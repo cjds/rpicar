@@ -6,19 +6,22 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 from os import curdir, sep
 import contextlib
 import os
-import socketserver
-import mmap
-
+import socket
 import urllib.parse as urlparse
 from urllib.parse import parse_qs
 
 from functools import partialmethod
 
 PORT_NUMBER = 8080
+HOST = '127.0.0.1'  # Standard loopback interface address (localhost)
+SOCKET_PORT = 65432        # Port to listen on (non-privileged ports are > 1023)
 
 
 
 def partialclass(cls, *args, **kwds):
+    """
+    Simple method to implement a partial around the init of a class
+    """
 
     class NewCls(cls):
         __init__ = partialmethod(cls.__init__, *args, **kwds)
@@ -32,8 +35,8 @@ def partialclass(cls, *args, **kwds):
 class myHandler(BaseHTTPRequestHandler):
         
 
-        def __init__(self, memory_mapped_file, *args, **kwargs):
-            self.memory_mapped_file = memory_mapped_file
+        def __init__(self, socket_conn, *args, **kwargs):
+            self.socket_conn = socket_conn
             super(BaseHTTPRequestHandler, self).__init__(*args, **kwargs)
         
         #Handler for the GET requests
@@ -48,9 +51,8 @@ class myHandler(BaseHTTPRequestHandler):
             elif parsed_url.path == "/keybind":
                 print(urlparse.parse_qs(parsed_url.query))
                 print(parsed_url.path)
-                self.memory_mapped_file[0:1] = bytearray("W", 'utf8')
-                self.memory_mapped_file.flush()
-                self.memory_mapped_file.seek(0)
+                print('sending data')
+                self.socket_conn.sendall(bytearray("W\n", 'utf8'))
             else:
                 self.path = os.path.join(dir_path, self.path[1:])
             try:
@@ -85,16 +87,18 @@ class myHandler(BaseHTTPRequestHandler):
             except IOError:
                 self.send_error(404,'File Not Found: %s' % self.path)
 
+# Start a Socket server to push the data to C++
 if __name__ == "__main__":
     try:
-        with open('/tmp/daygeek.txt', 'r+') as f:
-            with contextlib.closing(mmap.mmap(f.fileno(), 0, mmap.MAP_SHARED, access=mmap.ACCESS_WRITE)) as m:
-                m.seek(0) # rewind
-                #Create a web server and define the handler to manage the
-                #incoming request
-                server = HTTPServer(('', PORT_NUMBER), partialclass(myHandler, m))
+        print("Waiting for socket client to connect")
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            print("Socket client connected")
+            s.bind((HOST, SOCKET_PORT))
+            s.listen()
+            conn, addr = s.accept()
+            with conn:
+                server = HTTPServer(('', PORT_NUMBER), partialclass(myHandler, conn))
                 print('Started httpserver on port ' , PORT_NUMBER)
                 server.serve_forever()
     except KeyboardInterrupt:
         print('^C received, shutting down the web server')
-        server.socket.close()
