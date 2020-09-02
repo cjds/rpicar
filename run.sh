@@ -5,4 +5,5 @@ docker run -itd \
 	-v ~/.vimrc:/root/.vimrc \
 	-v ~/.git:/root/.git \
 	-v ~/.gitconfig:/root/.gitconfig \
+	-v $PWD:/rpicar \
 	--name rpicar --privileged --net=host rpicar:latest bash

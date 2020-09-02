@@ -12,10 +12,22 @@ Run `./run.sh` to start a new instance of that Docker.
 
 ### Compiling the code:
 
-
 ```
 docker exec -it rpicar bash
+```
+to enter the Docker you have made.
+
+
+```
 bb
 ```
+will by default compile the code for Raspberry Pi
+
+```
+bbx86
+```
+will compile the code for an x86 computer
+
+
 
 
