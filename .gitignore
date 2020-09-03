@@ -23,3 +23,6 @@ GTAGS
 # Other files
 *.swp
 *.pyc
+
+# node
+node_modules

@@ -1,0 +1,4 @@
+load("@npm//@bazel/typescript:index.bzl", "ts_library")
+
+ts_library(name = "greeter", srcs = [":greeter.ts"], tsconfig = ":tsconfig.json",
+node_modules="//:node_modules")
