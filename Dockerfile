@@ -20,6 +20,7 @@ RUN pip3 install supervisor
 
 RUN echo "source /rpicar/helpers.bash">> ~/.bashrc
 RUN echo "source ~/.git-completion.bash">> ~/.bashrc
+RUN echo "source /etc/bash_completion.d/bazel">> ~/.bashrc
 
 # Temp fix for this issue
 # https://github.com/bazelbuild/bazel/issues/11554
