@@ -29,5 +29,10 @@ bbx86
 will compile the code for an x86 computer
 
 
+## Running the UI in dev mode
 
+You can run the UI from the dev server using
 
+```
+bazel run //ui:devserver
+```
