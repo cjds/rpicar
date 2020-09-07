@@ -49,3 +49,28 @@ npm_install(
     package_json = "//:package.json",
     package_lock_json = "//:package-lock.json",
 )
+
+
+#################
+#     SASS      #
+#################
+# sass setup
+http_archive(
+    name = "io_bazel_rules_sass",
+    sha256 = "36e2442b2e9e986d8ac709bcc8fffb9d66363c1f3bba2459906c9f3eb744c069",
+    strip_prefix = "rules_sass-1.24.3",
+    # Make sure to check for the latest version when you install
+    url = "https://github.com/bazelbuild/rules_sass/archive/1.24.3.zip",
+)
+
+# Fetch required transitive dependencies. This is an optional step because you
+# can always fetch the required NodeJS transitive dependency on your own.
+load("@io_bazel_rules_sass//:package.bzl", "rules_sass_dependencies")
+
+rules_sass_dependencies()
+
+# Setup repositories which are needed for the Sass rules.
+load("@io_bazel_rules_sass//:defs.bzl", "sass_repositories")
+
+sass_repositories()
+
