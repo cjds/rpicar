@@ -1,5 +1,5 @@
 load("@build_bazel_rules_nodejs//:index.bzl", "nodejs_binary")
-exports_files(["tsconfig.json"], visibility = ["//visibility:public"])
+exports_files(["tsconfig.json", "webpack.config.js"], visibility = ["//visibility:public"])
 
 filegroup(
     name = "node_modules",
