@@ -1,11 +1,11 @@
 import React from "react";
 import ReactDOM from "react-dom";
-import { AppBar } from "./components/AppBar/AppBar";
+import {AppBar} from "./components/AppBar/AppBar";
 
 ReactDOM.render(
   <div className="DD">
-    <AppBar />
     <div className="body">
+    <AppBar />
       <h1>Allo, </h1>
     </div>
   </div>,
