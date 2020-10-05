@@ -30,6 +30,7 @@ RUN curl -sL https://deb.nodesource.com/setup_14.x | bash -
 RUN apt install -y nodejs
 RUN npm install -g typescript
 RUN npm install -g parcel-bundler
+RUN npm install -g @bazel/ibazel
 
 WORKDIR /rpicar
 RUN npm install
